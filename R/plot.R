@@ -362,19 +362,34 @@ plot.xts <- function(x,
                      legend.loc=NULL,
                      extend.xaxis=FALSE){
 
-  if(is.numeric(multi.panel) || isTRUE(multi.panel)) {
-    # Only need to check pars in multipanel scenarios. The single panel
-    # scenarios supports colors for each data point in the series.
-
-    # check for colorset or col argument
-    if(hasArg("colorset")) {
-      col <- eval.parent(plot.call$colorset)
-    }
-    # ensure pars have ncol(x) elements
-    col <- rep(col, length.out = NCOL(x))
-    lty <- rep(lty, length.out = NCOL(x))
-    lwd <- rep(lwd, length.out = NCOL(x))
-  }
+    switch(type,
+         h={
+           # use up.col and dn.col if specified
+           if (!is.null(up.col) && !is.null(dn.col)){
+             col <- ifelse(x[,1] < 0, dn.col, up.col)
+           } else if (is.null(col)) {
+             col <- 1
+           }
+           if (length(col) < nrow(x[,1]))
+             col <- col[1]
+         },
+         p=, l=, b=, c=, o=, s=, S=, n={
+           if(hasArg("colorset")) {
+             col <- eval.parent(plot.call$colorset)
+           }
+           # ensure pars have ncol(x) elements
+           col <- rep(col, length.out = NCOL(x))
+           lty <- rep(lty, length.out = NCOL(x))
+           lwd <- rep(lwd, length.out = NCOL(x))
+         },
+         {
+           # default case
+           warning(paste(type, "not recognized. Type must be one of
+                         'p', 'l', 'b, 'c', 'o', 'h', 's', 'S', 'n'.
+                         plot.xts supports the same types as plot.default,
+                         see ?plot for valid arguments for type"))
+         }
+        )
   
   # Small multiples with multiple pages behavior occurs when multi.panel is
   # an integer. (i.e. multi.panel=2 means to iterate over the data in a step
